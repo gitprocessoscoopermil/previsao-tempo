@@ -1,0 +1,67 @@
+<!-- PAINEL PRINCIPAL DA PREVISÃO -->
+<div id="painel-tempo" style="background: #1e293b; color: white; padding: 20px; border-radius: 12px; font-family: sans-serif; box-shadow: 0 4px 15px rgba(0,0,0,0.2); max-width: 650px;">
+    <h3 style="margin: 0 0 15px 0; color: #38bdf8; font-size: 18px; text-transform: uppercase; letter-spacing: 1px;">
+        Santa Rosa - RS (Próximos Dias)
+    </h3>
+    
+    <!-- Os blocos dos dias serão inseridos aqui dentro automaticamente -->
+    <div id="dias-container" style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: space-between;">
+        <span style="color: #94a3b8;">Carregando previsão...</span>
+    </div>
+</div>
+
+<script>
+    // URL da API configurada para pegar a previsão diária dos próximos 4 dias
+    const url = "https://api.open-meteo.com/v1/forecast?latitude=-27.8681&longitude=-54.4789&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=America%2FSao_Paulo&forecast_days=4";
+
+    // Função para traduzir o código do clima para um emoji/texto descritivo
+    function obterClima(codigo) {
+        if (codigo === 0) return { texto: "Limpo", emoji: "☀️" };
+        if ([1, 2, 3].includes(codigo)) return { texto: "Parc. Nublado", emoji: "⛅" };
+        if ([45, 48].includes(codigo)) return { texto: "Névoa", emoji: "🌫️" };
+        if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(codigo)) return { texto: "Chuva", emoji: "🌧️" };
+        if ([71, 73, 75, 77, 85, 86].includes(codigo)) return { texto: "Neve", emoji: "❄️" };
+        if ([95, 96, 99].includes(codigo)) return { texto: "Tempestade", emoji: "⛈️" };
+        return { texto: "Variável", emoji: "☁️" };
+    }
+
+    // Função para formatar a data (Ex: "Sex, 12/06")
+    function formatarData(dataStr) {
+        const data = new Date(dataStr + "T00:00:00");
+        return data.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
+    }
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById("dias-container");
+            container.innerHTML = ""; // Limpa o texto de carregando
+
+            // Loop para criar o bloco de cada um dos 4 dias retornados pela API
+            for (let i = 0; i < data.daily.time.length; i++) {
+                const dataFormatada = formatarData(data.daily.time[i]);
+                const tempMax = Math.round(data.daily.temperature_2m_max[i]);
+                const tempMin = Math.round(data.daily.temperature_2m_min[i]);
+                const clima = obterClima(data.daily.weathercode[i]);
+
+                // Cria o HTML do quadradinho de cada dia
+                const blocoDia = `
+                    <div style="background: #334155; padding: 12px; border-radius: 8px; flex: 1; min-width: 120px; text-align: center; box-sizing: border-box;">
+                        <span style="display: block; font-size: 13px; font-weight: bold; color: #cbd5e1; text-transform: capitalize;">${dataFormatada}</span>
+                        <span style="display: block; font-size: 28px; margin: 8px 0;">${clima.emoji}</span>
+                        <span style="display: block; font-size: 12px; color: #94a3b8; margin-bottom: 6px;">${clima.texto}</span>
+                        <div style="font-size: 13px; font-weight: bold;">
+                            <span style="color: #f43f5e;">${tempMax}°</span> 
+                            <span style="color: #38bdf8; margin-left: 5px;">${tempMin}°</span>
+                        </div>
+                    </div>
+                `;
+                
+                container.innerHTML += blocoDia;
+            }
+        })
+        .catch(error => {
+            document.getElementById("dias-container").innerHTML = "<span style='color: #ef4444;'>Erro ao carregar os dados.</span>";
+            console.error("Erro:", error);
+        });
+</script>
