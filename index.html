@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=360">
+<title>Previsão do Tempo - Santa Rosa RS</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1e293b; width: 360px; height: 240px; overflow: hidden; font-family: sans-serif; }
+  #painel { width: 360px; height: 240px; background: #1e293b; padding: 12px; }
+  h3 { color: #38bdf8; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  #data-atualizacao { color: #64748b; font-size: 10px; margin-bottom: 10px; }
+  #dias-container { display: flex; gap: 8px; justify-content: space-between; }
+  .dia {
+    background: #334155;
+    border-radius: 8px;
+    flex: 1;
+    padding: 8px 4px;
+    text-align: center;
+  }
+  .dia .data { display: block; font-size: 10px; font-weight: bold; color: #cbd5e1; text-transform: capitalize; }
+  .dia .emoji { display: block; font-size: 24px; margin: 5px 0 3px; }
+  .dia .descricao { display: block; font-size: 9px; color: #94a3b8; margin-bottom: 5px; }
+  .dia .temps { font-size: 12px; font-weight: bold; }
+  .dia .max { color: #f43f5e; }
+  .dia .min { color: #38bdf8; margin-left: 4px; }
+</style>
+</head>
+<body>
+<div id="painel">
+  <h3>Santa Rosa - RS</h3>
+  <div id="data-atualizacao">Carregando...</div>
+  <div id="dias-container"><span style="color:#94a3b8;font-size:12px">Carregando previsão...</span></div>
+</div>
+<script>
+const hoje = new Date().toISOString().split('T')[0];
+const API_URL = `https://api.open-meteo.com/v1/forecast?latitude=-27.8681&longitude=-54.4789&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=America%2FSao_Paulo&forecast_days=4&_cb=${hoje}`;
+
+function obterClima(c) {
+  if (c === 0) return { texto: "Limpo", emoji: "☀️" };
+  if ([1,2,3].includes(c)) return { texto: "Parc. Nublado", emoji: "⛅" };
+  if ([45,48].includes(c)) return { texto: "Névoa", emoji: "🌫️" };
+  if ([51,53,55,61,63,65,80,81,82].includes(c)) return { texto: "Chuva", emoji: "🌧️" };
+  if ([71,73,75,77,85,86].includes(c)) return { texto: "Neve", emoji: "❄️" };
+  if ([95,96,99].includes(c)) return { texto: "Tempestade", emoji: "⛈️" };
+  return { texto: "Variável", emoji: "☁️" };
+}
+
+function formatarData(s) {
+  const d = new Date(s + "T00:00:00");
+  return d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
+}
+
+fetch(API_URL)
+  .then(r => r.json())
+  .then(data => {
+    const agora = new Date();
+    document.getElementById('data-atualizacao').textContent =
+      'Atualizado: ' + agora.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    const container = document.getElementById('dias-container');
+    container.innerHTML = '';
+    for (let i = 0; i < data.daily.time.length; i++) {
+      const clima = obterClima(data.daily.weathercode[i]);
+      const max = Math.round(data.daily.temperature_2m_max[i]);
+      const min = Math.round(data.daily.temperature_2m_min[i]);
+      const dataF = formatarData(data.daily.time[i]);
+      container.innerHTML += `
+        <div class="dia">
+          <span class="data">${dataF}</span>
+          <span class="emoji">${clima.emoji}</span>
+          <span class="descricao">${clima.texto}</span>
+          <div class="temps">
+            <span class="max">${max}°</span><span class="min">${min}°</span>
+          </div>
+        </div>`;
+    }
+  })
+  .catch(() => {
+    document.getElementById('dias-container').innerHTML = "<span style='color:#ef4444'>Erro ao carregar.</span>";
+  });
+</script>
+</body>
+</html>
