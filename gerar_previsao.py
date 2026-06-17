@@ -73,7 +73,6 @@ def cache_icone(nome, cor, tamanho=52):
             svg = r.read()
         png = cairosvg.svg2png(bytestring=svg, output_width=tamanho, output_height=tamanho)
         img = Image.open(io.BytesIO(png)).convert("RGBA")
-        # Aplica tint
         _, _, _, a = img.split()
         tinted = Image.merge("RGBA", [
             Image.new("L", img.size, cor[0]),
@@ -120,7 +119,7 @@ def nome_dia(date_str, i):
     if i == 0: return "Hoje"
     if i == 1: return "Amanhã"
     d = datetime.strptime(date_str, "%Y-%m-%d")
-    return ["Seg","Ter","Qua","Qui","Sex","Sab","Dom"][d.weekday()]
+    return ["Segunda","Terça","Quarta","Quinta","Sexta","Sábado","Domingo"][d.weekday()]
 
 def gerar_imagem(dados):
     img  = Image.new("RGB", (LARGURA, ALTURA), (255,255,255))
@@ -154,7 +153,6 @@ def gerar_imagem(dados):
     sr = sunrise[-5:] if len(sunrise) >= 5 else "--:--"
     ss = sunset[-5:]  if len(sunset)  >= 5 else "--:--"
 
-    # ── Painel esquerdo: HOJE ─────────────────────────────────────
     draw.text((14, 10), "Santa Rosa - RS", font=fb13, fill=(40,40,80))
 
     nome_ic, cor_ic = wmo_icone(wmo0)
@@ -165,7 +163,7 @@ def gerar_imagem(dados):
     draw.text((90, 78), wmo_desc(wmo0), font=fb11, fill=(80,80,130))
 
     cy_info = 106
-    nome_ic2, cor_ic2 = wmo_icone(61)  # ícone chuva fixo
+    nome_ic2, cor_ic2 = wmo_icone(61)
     ic_chuva = cache_icone(nome_ic2, cor_ic2, tamanho=18)
     colar_icone(img, ic_chuva, 20, cy_info+6)
     draw.text((32, cy_info),    f"{chuva0:.0f} mm", font=fb10, fill=(50,90,200))
@@ -175,15 +173,13 @@ def gerar_imagem(dados):
     draw.text((105, cy_info+13), "Umidade",       font=f9,   fill=(110,120,160))
 
     draw.text((32,  cy_info+30), f"{vento0:.0f} km/h", font=fb10, fill=(50,90,200))
-    draw.text((32,  cy_info+43), "Vento máx.",           font=f9,   fill=(110,120,160))
+    draw.text((32,  cy_info+43), "Vento máx.",          font=f9,   fill=(110,120,160))
 
     draw.text((105, cy_info+30), f"{sr}  {ss}", font=fb10, fill=(50,90,200))
     draw.text((105, cy_info+43), "Nasc / Pôr",  font=f9,   fill=(110,120,160))
 
-    # ── Divisor ───────────────────────────────────────────────────
     draw.line([(193,8),(193,ALTURA-8)], fill=(195,210,230), width=1)
 
-    # ── Painel direito: próximos 3 dias ───────────────────────────
     row_h = (ALTURA - 16) // 3
     for i in range(1, 4):
         ri = i - 1
@@ -193,30 +189,26 @@ def gerar_imagem(dados):
 
         cy_row = ry + row_h//2 - 12
 
-        # Coluna 1: dia + descrição (x=200)
         draw.text((200, cy_row),    nome_dia(d["time"][i], i),     font=fb10, fill=(70,70,120))
         draw.text((200, cy_row+14), wmo_desc(d["weathercode"][i]), font=f9,   fill=(110,120,165))
 
-        # Coluna 2: ícone centralizado (x=252)
         nome_ic3, cor_ic3 = wmo_icone(d["weathercode"][i])
         ic = cache_icone(nome_ic3, cor_ic3, tamanho=30)
-        colar_icone(img, ic, 252, cy_row+10)
+        colar_icone(img, ic, 282, cy_row+10)
 
-        # Coluna 3: mm de chuva abaixo do ícone (x=252, cy_row+26)
         c = d["precipitation_sum"][i] or 0
         if c > 0:
             txt_mm = f"{c:.0f}mm"
             tw_mm = draw.textlength(txt_mm, font=f9)
-            draw.text((252 - tw_mm//2, cy_row+26), txt_mm, font=f9, fill=(70,130,210))
+            draw.text((282 - tw_mm//2, cy_row+26), txt_mm, font=f9, fill=(70,130,210))
 
-        # Coluna 4: temperaturas (x=285)
         tx = d["temperature_2m_max"][i]
         tn = d["temperature_2m_min"][i]
         t_txt = f"{tx:.0f}°"
         n_txt = f"{tn:.0f}°"
         tw = draw.textlength(t_txt, font=fb11)
-        draw.text((LARGURA-64,      cy_row), t_txt, font=fb11, fill=(210,70,30))
-        draw.text((LARGURA-64+tw+3, cy_row), n_txt, font=fb11, fill=(60,130,210))
+        draw.text((LARGURA-58,      cy_row), t_txt, font=fb11, fill=(210,70,30))
+        draw.text((LARGURA-58+tw+3, cy_row), n_txt, font=fb11, fill=(60,130,210))
 
     return img
 
