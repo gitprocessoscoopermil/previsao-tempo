@@ -1,4 +1,4 @@
-import requests, cairosvg, io, urllib.request
+import requests, cairosvg, io, urllib.request, numpy as np
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
 import os
@@ -10,7 +10,6 @@ ALTURA  = 240
 
 ICON_BASE = "https://raw.githubusercontent.com/erikflowers/weather-icons/master/svg/wi-{}.svg"
 
-# WMO -> (nome_icone, cor_rgb)
 ICON_MAP = {
     0:  ("day-sunny",      (245,158,11)),
     1:  ("day-cloudy",     (148,163,184)),
@@ -209,6 +208,23 @@ def gerar_imagem(dados):
         tw = draw.textlength(t_txt, font=fb11)
         draw.text((LARGURA-58,      cy_row), t_txt, font=fb11, fill=(210,70,30))
         draw.text((LARGURA-58+tw+3, cy_row), n_txt, font=fb11, fill=(60,130,210))
+
+    # ── Logo Coopermil ───────────────────────────────────────────
+    try:
+        logo_url = "https://raw.githubusercontent.com/gitprocessoscoopermil/previsao-tempo/main/logotipo-coopermil-jpg.jpg"
+        with urllib.request.urlopen(logo_url) as r:
+            logo_data = r.read()
+        logo = Image.open(io.BytesIO(logo_data)).convert("RGBA")
+        data = np.array(logo)
+        r2, g2, b2 = data[:,:,0], data[:,:,1], data[:,:,2]
+        mask = (r2 > 220) & (g2 > 220) & (b2 > 220)
+        data[:,:,3] = np.where(mask, 0, 255)
+        logo = Image.fromarray(data)
+        ratio = 22 / logo.height
+        logo = logo.resize((int(logo.width * ratio), 22), Image.LANCZOS)
+        img.paste(logo, (6, ALTURA - 28), logo)
+    except Exception as e:
+        print(f"Logo erro: {e}")
 
     return img
 
