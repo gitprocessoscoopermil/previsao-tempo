@@ -2,7 +2,6 @@ name: Gerar Previsão do Tempo
 
 on:
   schedule:
-    # Roda todos os dias às 01:00 BRT (04:00 UTC)
     - cron: '0 4 * * *'
   workflow_dispatch:
 
@@ -23,7 +22,7 @@ jobs:
 
       - name: Instalar dependências
         run: |
-          pip install pillow requests cairosvg
+          pip install pillow requests cairosvg numpy
 
       - name: Instalar fontes
         run: |
