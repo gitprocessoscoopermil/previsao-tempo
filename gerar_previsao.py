@@ -158,7 +158,7 @@ def gerar_imagem(dados):
     ic_hoje = cache_icone(nome_ic, cor_ic, tamanho=54)
     colar_icone(img, ic_hoje, 42, 65)
 
-    draw.text((88, 40), f"{tmax0:.0f}°/{tmin0:.0f}°", font=fb28, fill=(25,25,60))
+    draw.text((78, 40), f"{tmax0:.0f}°/{tmin0:.0f}°", font=fb28, fill=(25,25,60))
     draw.text((90, 78), wmo_desc(wmo0), font=fb11, fill=(80,80,130))
 
     cy_info = 106
